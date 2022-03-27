@@ -58,7 +58,7 @@ private
     Γ : Ctx
     ℓ : Lv
     M M′ M″ N N′ A A′ B B′ : Term
-    𝔸 𝔸′ 𝔸″ 𝔹 𝔹′ : Type
+    𝔸 𝔸′ 𝔸″ 𝔹 𝔹′ ℂ ℂ′ : Type
     x x′ y y′ : Id
 
 data ⊢_ where
@@ -177,11 +177,30 @@ true⇒ctx (≈-≈type J _) = type⇒ctx J
 ⊢id : Γ ⊢ 𝔸 type → Γ ⊢ ƛ x 𝔸 (v x) ∶ Π x 𝔸 𝔸
 ⊢id J = ≈-ƛ (≈-v (⊢∷ (type⇒ctx J) J) First.[ refl , refl ])
 
+module ≈type-Reasoning where
+
+  infix 1 begin[_]_
+  infixr 2 _≈type⟨_⟩_ ≈type-∎
+
+  begin[_]_ : ∀ Γ → Γ ⊢ 𝔸 ≈ 𝔹 type → Γ ⊢ 𝔸 ≈ 𝔹 type
+  begin[ Γ ] p = p
+
+  _≈type⟨_⟩_ : ∀ 𝔸 → Γ ⊢ 𝔸 ≈ 𝔹 type → Γ ⊢ 𝔹 ≈ ℂ type → Γ ⊢ 𝔸 ≈ ℂ type
+  𝔸 ≈type⟨ p ⟩ q = ≈type-trans p q
+
+  ≈type-∎ : ∀ 𝔸 𝔹 → Γ ⊢ 𝔸 ≈ 𝔹 type → Γ ⊢ 𝔸 ≈ 𝔹 type
+  ≈type-∎ _ _ p = p
+
+  syntax ≈type-∎ 𝔸 𝔹 p = 𝔸 ≈type[ p ] 𝔹
+
 ⊢Πx,x : [] ⊢ T (suc ℓ) (π (suc ℓ) x (u ℓ) (t ℓ (v x))) ≈ Π x (U ℓ) (T ℓ (v x)) type
-⊢Πx,x {ℓ = ℓ} = ≈type-trans
-                  (≈type-βTπ (≈-u ⊢[]) (≈-t J₂))
-                  (≈type-Π (≈type-βTu ⊢[]) (≈type-βTt J₂))
+⊢Πx,x {ℓ = ℓ} {x = x} = begin[ [] ]
+  T (suc ℓ) (π (suc ℓ) x (u ℓ) (t ℓ (v x)))     ≈type⟨ ≈type-βTπ (≈-u ⊢[]) (≈-t J₂) ⟩
+  Π x (T (suc ℓ) (u ℓ)) (T (suc ℓ) (t ℓ (v x))) ≈type[ ≈type-Π (≈type-βTu ⊢[]) (≈type-βTt J₂) ]
+  Π x (U ℓ) (T ℓ (v x))
   where
+    open ≈type-Reasoning
+
     J₁ : ⊢ (x , T (suc ℓ) (u ℓ)) ∷ []
     J₁ = ⊢∷ ⊢[] (≈type-T (≈-u ⊢[]))
 
